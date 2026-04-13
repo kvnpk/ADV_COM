@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Professor Dashboard</title>
+    <style>
+        body { font-family: sans-serif; background-color: #f0f2f5; padding: 40px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .panel { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" onclick="sessionStorage.clear()" style="text-decoration: none; color: red; font-weight: bold;">Logout</a>
+        <h1 style="color:#1a73e8;" id="welcomeMessage">Welcome, Professor!</h1>
+
+        <div class="panel">
+            <h2>Grade Management (Coming Soon)</h2>
+            <p>You will be able to input grades and apply grading curves here.</p>
+        </div>
+    </div>
+
+    <script>
+        // Security check
+        const loggedInId = sessionStorage.getItem("loggedInId");
+        const loggedInName = sessionStorage.getItem("loggedInName");
+        
+        if (!loggedInId || sessionStorage.getItem("role") !== "Professor") {
+            window.location.href = "/"; // Kick them back to login
+        } else {
+            document.getElementById("welcomeMessage").innerText = "Welcome, Professor " + loggedInName + "!";
+        }
+    </script>
+</body>
+</html>

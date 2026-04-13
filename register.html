@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MyCourseVille - Registrar</title>
+    <style>
+        body { font-family: sans-serif; background-color: #f0f2f5; padding: 60px; text-align: center; }
+        h1 { color: #1a73e8; font-size: 2.5rem; margin-bottom: 10px; }
+        .container { display: flex; justify-content: center; gap: 30px; margin-top: 30px; }
+        
+        /* Role Selection Cards */
+        .card { 
+            background: white; padding: 40px; border-radius: 12px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 250px;
+            cursor: pointer; transition: transform 0.2s;
+        }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 6px 15px rgba(0,0,0,0.15); }
+        .card h2 { color: #1a73e8; margin-top: 0; }
+        .card p { font-size: 0.9rem; color: #555; }
+
+        /* Registration Panels (Hidden by default) */
+        .form-panel { 
+            background: white; padding: 30px; border-radius: 10px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 350px; text-align: left; margin: 0 auto;
+            display: none; /* Hidden initially */
+            margin-top: 30px;
+        }
+        input, select, button.submit-btn { width: 100%; padding: 10px; margin-top: 10px; box-sizing: border-box; margin-bottom: 5px; }
+        button.submit-btn { background: #1a73e8; color: white; border: none; cursor: pointer; font-weight: bold; border-radius: 5px; margin-top: 15px; }
+        
+        .back-link { display: inline-block; margin-bottom: 15px; color: #1a73e8; cursor: pointer; text-decoration: none; font-weight: bold; }
+        .back-link:hover { text-decoration: underline; }
+
+        .top-nav { text-align: left; max-width: 900px; margin: 0 auto; }
+        .top-nav a { text-decoration: none; color: #1a73e8; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="top-nav">
+        <a href="/">← Back to Login</a>
+    </div>
+
+    <h1>Registrar Portal</h1>
+    <p id="subtitle">Select the type of user you want to create.</p>
+
+    <div id="roleSelection" class="container">
+        <div class="card" onclick="showForm('Student')">
+            <h2>Student</h2>
+            <p>Register a new student in the system.</p>
+        </div>
+        <div class="card" onclick="showForm('Professor')">
+            <h2>Professor</h2>
+            <p>Register a new faculty member.</p>
+        </div>
+    </div>
+
+    <div id="studentForm" class="form-panel">
+        <span class="back-link" onclick="goBack()">← Back to Roles</span>
+        <h2 style="margin-top:0; color:#1a73e8;">Register Student</h2>
+        <label>Name:</label><input type="text" id="studentName">
+        <label>ID:</label><input type="text" id="studentId">
+        <label>Major:</label>
+        <select id="major">
+            <option value="Automation and Manufacturing Engineering">Automation and Manufacturing Engineering</option>
+            <option value="Aerospace Engieering">Aerospace Engieering</option>
+            <option value="Information and Communication Engineering">Information and Communication Engineering</option>
+            <option value="Nano Engineering">Nano Engineering</option>
+            <option value="Robotics and Artificial Inteligence Engieering">Robotics and Artificial Inteligence Engieering</option>
+            <option value="Semiconductor Engineering">Semiconductor Engineering</option>
+        </select>
+        <button class="submit-btn" onclick="createStudent()">Create Student</button>
+    </div>
+
+    <div id="professorForm" class="form-panel">
+        <span class="back-link" onclick="goBack()">← Back to Roles</span>
+        <h2 style="margin-top:0; color:#1a73e8;">Register Professor</h2>
+        <label>Name:</label><input type="text" id="profName">
+        <label>Employee ID:</label><input type="text" id="profId">
+        <label>Department:</label>
+        <select id="department">
+            <option value="Engineering">Engineering</option>
+            <option value="Sciences">Sciences</option>
+            <option value="Business">Business</option>
+        </select>
+        <button class="submit-btn" onclick="createProfessor()">Create Professor</button>
+    </div>
+
+    <script>
+        function showForm(role) {
+            // Hide the role selection cards
+            document.getElementById('roleSelection').style.display = 'none';
+            document.getElementById('subtitle').innerText = "Fill out the registration details.";
+            
+            // Show the specific registration form
+            if (role === 'Student') {
+                document.getElementById('studentForm').style.display = 'block';
+            } else {
+                document.getElementById('professorForm').style.display = 'block';
+            }
+        }
+
+        function goBack() {
+            // Hide all forms
+            document.getElementById('studentForm').style.display = 'none';
+            document.getElementById('professorForm').style.display = 'none';
+            
+            // Show the role selection cards again
+            document.getElementById('roleSelection').style.display = 'flex';
+            document.getElementById('subtitle').innerText = "Select the type of user you want to create.";
+        }
+
+        function createStudent() {
+            const data = new URLSearchParams({
+                name: document.getElementById('studentName').value,
+                id: document.getElementById('studentId').value,
+                major: document.getElementById('major').value
+            });
+            fetch('/api/createStudent', { method: 'POST', body: data }).then(() => {
+                alert("Student Saved!"); 
+                document.getElementById('studentName').value = ''; 
+                document.getElementById('studentId').value = '';
+                goBack(); // Go back to the cards after saving
+            });
+        }
+
+        function createProfessor() {
+            const data = new URLSearchParams({
+                name: document.getElementById('profName').value,
+                id: document.getElementById('profId').value,
+                department: document.getElementById('department').value
+            });
+            fetch('/api/createProfessor', { method: 'POST', body: data }).then(() => {
+                alert("Professor Saved!"); 
+                document.getElementById('profName').value = ''; 
+                document.getElementById('profId').value = '';
+                goBack(); // Go back to the cards after saving
+            });
+        }
+    </script>
+</body>
+</html>

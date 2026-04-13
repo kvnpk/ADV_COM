@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Dashboard</title>
+    <style>
+        body { font-family: sans-serif; background-color: #f0f2f5; padding: 40px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .panel { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        select, button { width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box; }
+        button { background: #1a73e8; color: white; border: none; cursor: pointer; font-weight: bold; border-radius: 5px; margin-top: 15px;}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" onclick="sessionStorage.clear()" style="text-decoration: none; color: red; font-weight: bold;">Logout</a>
+        <h1 style="color:#1a73e8;" id="welcomeMessage">Welcome, Student!</h1>
+
+        <div class="panel">
+            <h2>Enroll in a Course</h2>
+            <label>Select Course:</label>
+            <select id="courseDropdown">
+                <option value="Calculus">Calculus</option>
+                <option value="Physics">Physics</option>
+                <option value="Stats">Stats</option>
+            </select>
+            <button onclick="enrollStudent()">Enroll</button>
+        </div>
+    </div>
+
+    <script>
+        // Security check: Make sure they are logged in!
+        const loggedInId = sessionStorage.getItem("loggedInId");
+        const loggedInName = sessionStorage.getItem("loggedInName");
+        
+        if (!loggedInId || sessionStorage.getItem("role") !== "Student") {
+            window.location.href = "/"; // Kick them back to login
+        } else {
+            document.getElementById("welcomeMessage").innerText = "Welcome, " + loggedInName + "!";
+        }
+
+        function enrollStudent() {
+            const data = new URLSearchParams({
+                studentId: loggedInId, // Used directly from login session!
+                courseName: document.getElementById('courseDropdown').value
+            });
+            fetch('/api/enrollStudent', { method: 'POST', body: data })
+                .then(r => r.text())
+                .then(alert);
+        }
+    </script>
+</body>
+</html>

@@ -4,49 +4,129 @@
     <meta charset="UTF-8">
     <title>Student Dashboard</title>
     <style>
-        body { font-family: sans-serif; background-color: #f0f2f5; padding: 40px; }
-        .container { max-width: 600px; margin: 0 auto; }
-        .panel { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        body { font-family: sans-serif; background-color: #f0f2f5; padding: 40px; text-align: center; }
+        .header { max-width: 900px; margin: 0 auto; text-align: left; margin-bottom: 20px;}
+        .container { display: flex; justify-content: center; gap: 30px; margin-top: 30px; max-width: 900px; margin: 0 auto;}
+        
+        /* Dashboard Cards */
+        .card { 
+            background: white; padding: 40px; border-radius: 12px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 250px;
+            cursor: pointer; transition: transform 0.2s;
+        }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 6px 15px rgba(0,0,0,0.15); }
+        .card h2 { color: #1a73e8; margin-top: 0; }
+        .card p { font-size: 0.9rem; color: #555; }
+
+        /* Panels */
+        .panel { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; margin: 0 auto; text-align: left;}
+        .hidden { display: none !important; }
+        
         select, button { width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box; }
-        button { background: #1a73e8; color: white; border: none; cursor: pointer; font-weight: bold; border-radius: 5px; margin-top: 15px;}
+        button { background: #1a73e8; color: white; border: none; cursor: pointer; font-weight: bold; border-radius: 5px; margin-top: 15px; padding: 12px;}
+        .back-btn { background: #ccc; color: #333; margin-bottom: 15px; width: auto; padding: 8px 15px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="header">
         <a href="/" onclick="sessionStorage.clear()" style="text-decoration: none; color: red; font-weight: bold;">Logout</a>
         <h1 style="color:#1a73e8;" id="welcomeMessage">Welcome, Student!</h1>
+        <p id="subtitle" style="color: #555;">Select an action below.</p>
+    </div>
 
-        <div class="panel">
-            <h2>Enroll in a Course</h2>
-            <label>Select Course:</label>
-            <select id="courseDropdown">
-                <option value="Calculus">Calculus</option>
-                <option value="Physics">Physics</option>
-                <option value="Stats">Stats</option>
-            </select>
-            <button onclick="enrollStudent()">Enroll</button>
+    <div id="menuCards" class="container">
+        <div class="card" onclick="showPanel('enrollPanel')">
+            <h2>Enroll in Course</h2>
+            <p>Register for new classes</p>
+        </div>
+        <div class="card" onclick="showPanel('transcriptPanel')">
+            <h2>My Transcript</h2>
+            <p>View your grades</p>
         </div>
     </div>
 
+    <div id="enrollPanel" class="panel hidden">
+        <button class="back-btn" onclick="showMenu()">← Back to Menu</button>
+        <h2>Enroll in a Course</h2>
+        <label>Select Course:</label>
+        <select id="courseDropdown"><option>Loading courses...</option></select>
+        <button onclick="enrollStudent()">Confirm Enrollment</button>
+    </div>
+
+    <div id="transcriptPanel" class="panel hidden">
+        <button class="back-btn" onclick="showMenu()">← Back to Menu</button>
+        <h2>My Transcript</h2>
+        <table>
+            <thead><tr><th>Course Name</th><th>Grade</th></tr></thead>
+            <tbody id="transcriptBody">
+                </tbody>
+        </table>
+        <button onclick="loadTranscript()" style="background:#555;">Refresh Transcript</button>
+    </div>
+
     <script>
-        // Security check: Make sure they are logged in!
         const loggedInId = sessionStorage.getItem("loggedInId");
-        const loggedInName = sessionStorage.getItem("loggedInName");
-        
-        if (!loggedInId || sessionStorage.getItem("role") !== "Student") {
-            window.location.href = "/"; // Kick them back to login
-        } else {
-            document.getElementById("welcomeMessage").innerText = "Welcome, " + loggedInName + "!";
+        document.getElementById("welcomeMessage").innerText = "Welcome, " + sessionStorage.getItem("loggedInName") + "!";
+
+        window.onload = function() {
+            // Load courses into dropdown immediately
+            fetch('/api/getCourses').then(r => r.json()).then(courses => {
+                const drop = document.getElementById('courseDropdown');
+                drop.innerHTML = "";
+                courses.forEach(c => drop.add(new Option(c.name + " (" + c.id + ")", c.id)));
+            });
+        };
+
+        // UI Navigation
+        function showPanel(panelId) {
+            document.getElementById('menuCards').style.display = 'none';
+            document.getElementById('subtitle').style.display = 'none';
+            document.getElementById('enrollPanel').classList.add('hidden');
+            document.getElementById('transcriptPanel').classList.add('hidden');
+            
+            document.getElementById(panelId).classList.remove('hidden');
+
+            // If opening transcript, load the latest grades
+            if (panelId === 'transcriptPanel') {
+                loadTranscript();
+            }
         }
 
+        function showMenu() {
+            document.getElementById('enrollPanel').classList.add('hidden');
+            document.getElementById('transcriptPanel').classList.add('hidden');
+            document.getElementById('menuCards').style.display = 'flex';
+            document.getElementById('subtitle').style.display = 'block';
+        }
+
+        // Backend Actions
         function enrollStudent() {
             const data = new URLSearchParams({
-                studentId: loggedInId, // Used directly from login session!
-                courseName: document.getElementById('courseDropdown').value
+                studentId: loggedInId,
+                courseId: document.getElementById('courseDropdown').value
             });
             fetch('/api/enrollStudent', { method: 'POST', body: data })
-                .then(r => r.text())
-                .then(alert);
+                .then(r => r.text()).then(msg => { 
+                    alert(msg); 
+                    showMenu(); // Go back to main menu after enrolling
+                });
+        }
+
+        function loadTranscript() {
+            fetch('/api/getTranscript', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ studentId: loggedInId })
+            }).then(r => r.json()).then(data => {
+                const tbody = document.getElementById('transcriptBody');
+                tbody.innerHTML = "";
+                for (const [course, grade] of Object.entries(data)) {
+                    tbody.innerHTML += `<tr><td>${course}</td><td><strong>${grade}</strong></td></tr>`;
+                }
+            });
         }
     </script>
 </body>

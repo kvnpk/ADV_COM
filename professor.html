@@ -4,20 +4,81 @@
     <meta charset="UTF-8">
     <title>Professor Dashboard</title>
     <style>
-        body { font-family: sans-serif; background-color: #f0f2f5; padding: 40px; }
-        .container { max-width: 600px; margin: 0 auto; }
-        .panel { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        body { font-family: sans-serif; background-color: #f0f2f5; padding: 40px; text-align: center; }
+        .header { max-width: 900px; margin: 0 auto; text-align: left; margin-bottom: 20px;}
+        .container { display: flex; justify-content: center; gap: 30px; margin-top: 30px; max-width: 900px; margin: 0 auto;}
+        
+        /* Dashboard Cards */
+        .card { 
+            background: white; padding: 40px; border-radius: 12px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 250px;
+            cursor: pointer; transition: transform 0.2s;
+        }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 6px 15px rgba(0,0,0,0.15); }
+        .card h2 { color: #1a73e8; margin-top: 0; }
+        .card p { font-size: 0.9rem; color: #555; }
+
+        /* Panels */
+        .panel { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; margin: 0 auto; text-align: left;}
+        .hidden { display: none !important; }
+        
+        input, select, button { width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 15px; box-sizing: border-box; }
+        button { background: #1a73e8; color: white; border: none; cursor: pointer; font-weight: bold; border-radius: 5px; padding: 12px;}
+        .back-btn { background: #ccc; color: #333; margin-bottom: 15px; width: auto; padding: 8px 15px; margin-top: 0; }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="header">
         <a href="/" onclick="sessionStorage.clear()" style="text-decoration: none; color: red; font-weight: bold;">Logout</a>
         <h1 style="color:#1a73e8;" id="welcomeMessage">Welcome, Professor!</h1>
+        <p id="subtitle" style="color: #555;">Select an action below.</p>
+    </div>
 
-        <div class="panel">
-            <h2>Grade Management (Coming Soon)</h2>
-            <p>You will be able to input grades and apply grading curves here.</p>
+    <div id="menuCards" class="container">
+        <div class="card" onclick="showPanel('createCoursePanel')">
+            <h2>Create Course</h2>
+            <p>Setup a new class and grading strategy</p>
         </div>
+        <div class="card" onclick="showPanel('gradePanel')">
+            <h2>Grade Student</h2>
+            <p>Input raw scores for enrolled students</p>
+        </div>
+    </div>
+
+    <div id="createCoursePanel" class="panel hidden">
+        <button class="back-btn" onclick="showMenu()">← Back to Menu</button>
+        <h2>Create New Course</h2>
+        <label>Course Name:</label><input type="text" id="courseName" placeholder="e.g. Intro to Java">
+        <label>Course ID:</label><input type="text" id="courseId" placeholder="e.g. CS101">
+        
+        <label>Grading Strategy:</label>
+        <select id="strategy" onchange="toggleStrategyParams()">
+            <option value="PassFail">Pass / Fail</option>
+            <option value="Letter">Letter Grade (Criteria)</option>
+            <option value="Curve">Curve Grading</option>
+        </select>
+
+        <div id="curveParams" class="hidden">
+            <label>Class Average:</label><input type="number" id="avg" value="70">
+            <label>Standard Deviation:</label><input type="number" id="sd" value="10">
+        </div>
+        <div id="letterParams" class="hidden">
+            <label>Min A:</label><input type="number" id="minA" value="90">
+            <label>Min B:</label><input type="number" id="minB" value="80">
+            <label>Min C:</label><input type="number" id="minC" value="70">
+            <label>Min D:</label><input type="number" id="minD" value="60">
+        </div>
+
+        <button onclick="createCourse()">Confirm & Create Course</button>
+    </div>
+
+    <div id="gradePanel" class="panel hidden">
+        <button class="back-btn" onclick="showMenu()">← Back to Menu</button>
+        <h2>Grade a Student</h2>
+        <label>Course ID:</label><input type="text" id="gradeCourseId" placeholder="e.g. CS101">
+        <label>Student ID:</label><input type="text" id="gradeStudentId" placeholder="Enter Student ID">
+        <label>Raw Score:</label><input type="number" id="rawScore" placeholder="e.g. 85.5">
+        <button onclick="submitGrade()">Submit Grade</button>
     </div>
 
     <script>
@@ -29,6 +90,70 @@
             window.location.href = "/"; // Kick them back to login
         } else {
             document.getElementById("welcomeMessage").innerText = "Welcome, Professor " + loggedInName + "!";
+        }
+
+        // UI Navigation
+        function showPanel(panelId) {
+            document.getElementById('menuCards').style.display = 'none';
+            document.getElementById('subtitle').style.display = 'none';
+            document.getElementById('createCoursePanel').classList.add('hidden');
+            document.getElementById('gradePanel').classList.add('hidden');
+            
+            document.getElementById(panelId).classList.remove('hidden');
+        }
+
+        function showMenu() {
+            document.getElementById('createCoursePanel').classList.add('hidden');
+            document.getElementById('gradePanel').classList.add('hidden');
+            document.getElementById('menuCards').style.display = 'flex';
+            document.getElementById('subtitle').style.display = 'block';
+        }
+
+        function toggleStrategyParams() {
+            const strat = document.getElementById("strategy").value;
+            document.getElementById("curveParams").classList.add("hidden");
+            document.getElementById("letterParams").classList.add("hidden");
+            if (strat === "Curve") document.getElementById("curveParams").classList.remove("hidden");
+            if (strat === "Letter") document.getElementById("letterParams").classList.remove("hidden");
+        }
+
+        // Backend Actions
+        function createCourse() {
+            const data = new URLSearchParams({
+                courseName: document.getElementById('courseName').value,
+                courseId: document.getElementById('courseId').value,
+                strategy: document.getElementById('strategy').value,
+                avg: document.getElementById('avg').value,
+                sd: document.getElementById('sd').value,
+                minA: document.getElementById('minA').value, minB: document.getElementById('minB').value,
+                minC: document.getElementById('minC').value, minD: document.getElementById('minD').value
+            });
+            fetch('/api/createCourse', { method: 'POST', body: data })
+                .then(r => r.text())
+                .then(msg => {
+                    alert(msg);
+                    // Clear the inputs
+                    document.getElementById('courseName').value = '';
+                    document.getElementById('courseId').value = '';
+                    showMenu(); // Return to menu
+                });
+        }
+
+        function submitGrade() {
+            const data = new URLSearchParams({
+                courseId: document.getElementById('gradeCourseId').value,
+                studentId: document.getElementById('gradeStudentId').value,
+                score: document.getElementById('rawScore').value
+            });
+            fetch('/api/gradeStudent', { method: 'POST', body: data })
+                .then(r => r.text())
+                .then(msg => {
+                    alert(msg);
+                    // Clear the inputs
+                    document.getElementById('gradeStudentId').value = '';
+                    document.getElementById('rawScore').value = '';
+                    showMenu(); // Return to menu
+                });
         }
     </script>
 </body>

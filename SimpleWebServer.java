@@ -38,13 +38,10 @@ public class SimpleWebServer {
                 Map<String, String> params = parseFormData(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
                 String id = params.get("id");
                 
-                Student found = SerializationManager.loadStudents().stream()
+                Student found = DataManager.loadStudents().stream()
                         .filter(s -> s.getId().equals(id)).findFirst().orElse(null);
 
-                String response = (found != null) 
-                    ? "{\"success\": true, \"name\": \"" + found.getName() + "\"}" 
-                    : "{\"success\": false}";
-
+                String response = (found != null) ? "{\"success\": true, \"name\": \"" + found.getName() + "\"}" : "{\"success\": false}";
                 exchange.getResponseHeaders().set("Content-Type", "application/json");
                 exchange.sendResponseHeaders(200, response.length());
                 exchange.getResponseBody().write(response.getBytes());
@@ -57,13 +54,10 @@ public class SimpleWebServer {
                 Map<String, String> params = parseFormData(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
                 String id = params.get("id");
                 
-                Professor found = SerializationManager.loadProfessors().stream()
+                Professor found = DataManager.loadProfessors().stream()
                         .filter(p -> p.getId().equals(id)).findFirst().orElse(null);
 
-                String response = (found != null) 
-                    ? "{\"success\": true, \"name\": \"" + found.getName() + "\"}" 
-                    : "{\"success\": false}";
-
+                String response = (found != null) ? "{\"success\": true, \"name\": \"" + found.getName() + "\"}" : "{\"success\": false}";
                 exchange.getResponseHeaders().set("Content-Type", "application/json");
                 exchange.sendResponseHeaders(200, response.length());
                 exchange.getResponseBody().write(response.getBytes());
@@ -74,7 +68,8 @@ public class SimpleWebServer {
         // --- CREATION / ENROLLMENT API ROUTES ---
         // (These remain exactly the same as before)
         server.createContext("/api/getStudents", exchange -> {
-            List<Student> students = SerializationManager.loadStudents();
+            List<Student> students = DataManager.loadStudents(); 
+            
             StringBuilder json = new StringBuilder("[");
             for (int i = 0; i < students.size(); i++) {
                 Student s = students.get(i);
@@ -82,6 +77,7 @@ public class SimpleWebServer {
                 if (i < students.size() - 1) json.append(",");
             }
             json.append("]");
+            
             byte[] response = json.toString().getBytes(StandardCharsets.UTF_8);
             exchange.getResponseHeaders().set("Content-Type", "application/json");
             exchange.sendResponseHeaders(200, response.length);
@@ -93,9 +89,11 @@ public class SimpleWebServer {
             if ("POST".equals(exchange.getRequestMethod())) {
                 Map<String, String> params = parseFormData(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
                 Student newStudent = new Student.StudentBuilder(params.get("name"), params.get("id")).setMajor(params.get("major")).build();
-                List<Student> allStudents = SerializationManager.loadStudents();
+                
+                List<Student> allStudents = DataManager.loadStudents();
                 allStudents.add(newStudent);
-                SerializationManager.saveStudents(allStudents);
+                DataManager.saveStudents(allStudents); // Saved using DataManager!
+                
                 String response = "Student saved successfully!";
                 exchange.sendResponseHeaders(200, response.length());
                 exchange.getResponseBody().write(response.getBytes());
@@ -107,9 +105,11 @@ public class SimpleWebServer {
             if ("POST".equals(exchange.getRequestMethod())) {
                 Map<String, String> params = parseFormData(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
                 Professor newProfessor = new Professor(params.get("name"), params.get("id"), params.get("department"));
-                List<Professor> allProfessors = SerializationManager.loadProfessors();
+                
+                List<Professor> allProfessors = DataManager.loadProfessors();
                 allProfessors.add(newProfessor);
-                SerializationManager.saveProfessors(allProfessors);
+                DataManager.saveProfessors(allProfessors); // Saved using DataManager!
+                
                 String response = "Professor saved successfully!";
                 exchange.sendResponseHeaders(200, response.length());
                 exchange.getResponseBody().write(response.getBytes());
@@ -120,10 +120,62 @@ public class SimpleWebServer {
         server.createContext("/api/enrollStudent", exchange -> {
             if ("POST".equals(exchange.getRequestMethod())) {
                 Map<String, String> params = parseFormData(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
-                SerializationManager.saveEnrollment(params.get("studentId"), params.get("courseName"));
-                String response = "Successfully enrolled!";
-                exchange.sendResponseHeaders(200, response.length());
-                exchange.getResponseBody().write(response.getBytes());
+                String studentId = params.get("studentId");
+                String courseName = params.get("courseName");
+                
+                Student activeStudent = DataManager.loadStudents().stream().filter(s -> s.getId().equals(studentId)).findFirst().orElse(null);
+                Course targetCourse = masterCourseList.stream().filter(c -> c.getCourseName().equals(courseName)).findFirst().orElse(null);
+
+                if (activeStudent != null && targetCourse != null) {
+                    studentController.enrollInCourse(activeStudent, targetCourse); // OOP Controller!
+                    String response = "Successfully enrolled in " + courseName + "!";
+                    exchange.sendResponseHeaders(200, response.length());
+                    exchange.getResponseBody().write(response.getBytes());
+                }
+            }
+            exchange.close();
+        });
+
+        server.createContext("/api/submitGrade", exchange -> {
+            if ("POST".equals(exchange.getRequestMethod())) {
+                Map<String, String> params = parseFormData(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
+                String studentId = params.get("studentId");
+                String courseName = params.get("courseName");
+                double score = Double.parseDouble(params.get("score"));
+                
+                Student targetStudent = DataManager.loadStudents().stream().filter(s -> s.getId().equals(studentId)).findFirst().orElse(null);
+                Course targetCourse = masterCourseList.stream().filter(c -> c.getCourseName().equals(courseName)).findFirst().orElse(null);
+
+                if (targetStudent != null && targetCourse != null) {
+                    professorController.inputGrade(targetCourse, targetStudent, score); // OOP Strategy!
+                    String response = "Grade saved and student notified!";
+                    exchange.sendResponseHeaders(200, response.length());
+                    exchange.getResponseBody().write(response.getBytes());
+                }
+            }
+            exchange.close();
+        });
+
+        server.createContext("/api/getTranscript", exchange -> {
+            if ("POST".equals(exchange.getRequestMethod())) {
+                Map<String, String> params = parseFormData(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
+                String studentId = params.get("studentId");
+                Student activeStudent = DataManager.loadStudents().stream().filter(s -> s.getId().equals(studentId)).findFirst().orElse(null);
+
+                if (activeStudent != null) {
+                    Map<String, String> transcript = studentController.getMyTranscript(activeStudent);
+                    
+                    StringBuilder json = new StringBuilder("{");
+                    for (Map.Entry<String, String> entry : transcript.entrySet()) {
+                        json.append("\"").append(entry.getKey()).append("\":\"").append(entry.getValue()).append("\",");
+                    }
+                    if (json.length() > 1) json.setLength(json.length() - 1); 
+                    json.append("}");
+
+                    exchange.getResponseHeaders().set("Content-Type", "application/json");
+                    exchange.sendResponseHeaders(200, json.length());
+                    exchange.getResponseBody().write(json.toString().getBytes(StandardCharsets.UTF_8));
+                }
             }
             exchange.close();
         });

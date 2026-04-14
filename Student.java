@@ -1,4 +1,4 @@
-public class Student extends User {
+public class Student extends User implements Observer {
     private static final long serialVersionUID = 1L;
 
     private String major;
@@ -6,6 +6,10 @@ public class Student extends User {
     private Student(StudentBuilder builder) {
         super(builder.name, builder.id);
         this.major = builder.major;
+    }
+    @Override
+    public void update(String message) {
+        System.out.println(message);
     }
 
     public String getMajor() { return major; }

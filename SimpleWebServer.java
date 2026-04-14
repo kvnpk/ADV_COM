@@ -13,6 +13,9 @@ import java.util.Map;
 public class SimpleWebServer {
     public static void main(String[] args) throws IOException {
         HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
+        List<Course> masterCourseList = DataManager.loadCourses();
+        StudentController studentController = new StudentController(masterCourseList);
+        ProfessorController professorController = new ProfessorController(masterCourseList);
 
         // --- PAGE ROUTES ---
         server.createContext("/", exchange -> {

@@ -1,7 +1,7 @@
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Course implements Subject, Serializable {
@@ -33,14 +33,16 @@ public class Course implements Subject, Serializable {
         }
     }
 
-    public void gradeStudent(Student student, double rawScore) {
+    public boolean gradeStudent(Student student, double rawScore) {
         if (enrolledStudents.contains(student)) {
             String finalGrade = gradingStrategy.calculateGrade(rawScore);
             grades.put(student, finalGrade);
             notifyObservers("final grade out");
+            return true;
         }
         else {
             System.out.println("Error: Student not enrolled.");
+            return false;
         }
     }
     @Override

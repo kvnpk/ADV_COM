@@ -64,11 +64,8 @@
         </div>
         <div id="letterParams" class="hidden">
             <label>Min A:</label><input type="number" id="minA" value="80">
-            <label>Min B+:</label><input type="number" id="minBplus" value="75">
             <label>Min B:</label><input type="number" id="minB" value="70">
-            <label>Min C+:</label><input type="number" id="minCplus" value="65">
             <label>Min C:</label><input type="number" id="minC" value="60">
-            <label>Min D+:</label><input type="number" id="minDplus" value="55">
             <label>Min D:</label><input type="number" id="minD" value="50">
         </div>
 
@@ -128,10 +125,8 @@
                 strategy: document.getElementById('strategy').value,
                 avg: document.getElementById('avg').value,
                 sd: document.getElementById('sd').value,
-                minA: document.getElementById('minA').value, 
-                minBplus: document.getElementById('minBplus').value, minB: document.getElementById('minB').value,
-                minCplus: document.getElementById('minCplus').value, minC: document.getElementById('minC').value, 
-                minDplus: document.getElementById('minDplus').value, minD: document.getElementById('minD').value
+                minA: document.getElementById('minA').value, minB: document.getElementById('minB').value,
+                minC: document.getElementById('minC').value, minD: document.getElementById('minD').value
             });
             fetch('/api/createCourse', { method: 'POST', body: data })
                 .then(r => r.text())

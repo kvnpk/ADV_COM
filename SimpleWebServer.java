@@ -86,10 +86,8 @@ public class SimpleWebServer {
                 strategy = new CurveGrading(Double.parseDouble(params.get("avg")), Double.parseDouble(params.get("sd")));
             } else if (strategyType.equals("Letter")) {
                 GradingCriteria criteria = new GradingCriteria(
-                    Double.parseDouble(params.get("minA")), 
-                    Double.parseDouble(params.get("minBplus")), Double.parseDouble(params.get("minB")),
-                    Double.parseDouble(params.get("minCplus")), Double.parseDouble(params.get("minC")), 
-                    Double.parseDouble(params.get("minDplus")), Double.parseDouble(params.get("minD"))
+                    Double.parseDouble(params.get("minA")), Double.parseDouble(params.get("minB")),
+                    Double.parseDouble(params.get("minC")), Double.parseDouble(params.get("minD"))
                 );
                 strategy = new LetterGrading(criteria);
             }

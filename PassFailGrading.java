@@ -1,11 +1,14 @@
-public class PassFailGrading implements GradingStrategy{
+import java.util.HashMap;
+import java.util.Map;
+
+public class PassFailGrading implements GradingStrategy {
     @Override
-    public String calculateGrade(double rawScore) {
-        if (rawScore >= 50) {
-            return "S";
+    public Map<Student, String> calculateGrades(Map<Student, Double> rawScores) {
+        Map<Student, String> finalGrades = new HashMap<>();
+        for (Map.Entry<Student, Double> entry : rawScores.entrySet()) {
+            if (entry.getValue() >= 50) finalGrades.put(entry.getKey(), "S");
+            else finalGrades.put(entry.getKey(), "F");
         }
-        else {
-            return "F";
-        }
+        return finalGrades;
     }
 }

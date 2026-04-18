@@ -14,12 +14,10 @@ public class SimpleWebServer {
     public static void main(String[] args) throws IOException {
         HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
 
-        // Load data using Person B's DataManager
         List<Course> masterCourseList = DataManager.loadCourses();
         StudentController studentController = new StudentController(masterCourseList);
         ProfessorController professorController = new ProfessorController(masterCourseList);
 
-        // --- PAGE ROUTES ---
         server.createContext("/", exchange -> {
             String path = exchange.getRequestURI().getPath();
             if (path.equals("/") || path.equals("/index.html")) serveHtmlFile(exchange, "index.html");
@@ -29,7 +27,6 @@ public class SimpleWebServer {
             else serveHtmlFile(exchange, "404");
         });
 
-        // --- LOGIN ROUTES ---
         server.createContext("/api/loginStudent", exchange -> {
             Map<String, String> params = parseExchange(exchange);
             Student found = DataManager.loadStudents().stream()
@@ -44,7 +41,6 @@ public class SimpleWebServer {
             sendResponse(exchange, found != null ? "{\"success\": true, \"name\": \"" + found.getName() + "\"}" : "{\"success\": false}");
         });
 
-        // --- REGISTRATION ROUTES ---
         server.createContext("/api/createStudent", exchange -> {
             Map<String, String> params = parseExchange(exchange);
             Student newStudent = new Student.StudentBuilder(params.get("name"), params.get("id")).setMajor(params.get("major")).build();
@@ -63,7 +59,6 @@ public class SimpleWebServer {
             sendResponse(exchange, "Professor Saved!");
         });
 
-        // --- PERSON B: COURSE & GRADING ROUTES ---
         server.createContext("/api/getCourses", exchange -> {
             StringBuilder json = new StringBuilder("[");
             for (int i = 0; i < masterCourseList.size(); i++) {
@@ -83,7 +78,7 @@ public class SimpleWebServer {
             if (strategyType.equals("PassFail")) {
                 strategy = new PassFailGrading();
             } else if (strategyType.equals("Curve")) {
-                strategy = new CurveGrading(Double.parseDouble(params.get("avg")), Double.parseDouble(params.get("sd")));
+                strategy = new CurveGrading(); 
             } else if (strategyType.equals("Letter")) {
                 GradingCriteria criteria = new GradingCriteria(
                     Double.parseDouble(params.get("minA")), Double.parseDouble(params.get("minB")),
@@ -141,11 +136,39 @@ public class SimpleWebServer {
             }
         });
 
+       server.createContext("/api/getNotifications", exchange -> {
+            Map<String, String> params = parseExchange(exchange);
+            String targetId = params.get("studentId");
+            
+            List<String> allNotifs = new java.util.ArrayList<>();
+            
+            for (Course c : masterCourseList) {
+                for (Student s : c.getEnrolledStudents()) {
+                    if (s.getId().equals(targetId) && s.getInbox() != null) {
+                        allNotifs.addAll(s.getInbox()); 
+                    }
+                }
+            }
+
+            if (!allNotifs.isEmpty()) {
+                StringBuilder json = new StringBuilder("[");
+                for (int i = 0; i < allNotifs.size(); i++) {
+                    json.append("\"").append(allNotifs.get(i)).append("\"");
+                    if (i < allNotifs.size() - 1) json.append(",");
+                }
+                json.append("]");
+                sendResponse(exchange, json.toString());
+            } else {
+                sendResponse(exchange, "[]");
+            }
+        });
+
+
+
         server.start();
         System.out.println("Server running on http://localhost:8080");
     }
 
-    // --- HELPER METHODS ---
     private static void serveHtmlFile(HttpExchange exchange, String filename) throws IOException {
         File htmlFile = new File(filename);
         if (htmlFile.exists()) {

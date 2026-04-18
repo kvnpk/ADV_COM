@@ -1,7 +1,7 @@
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Course implements Subject, Serializable {
@@ -35,13 +35,15 @@ public class Course implements Subject, Serializable {
         }
     }
 
-    public void gradeStudent(Student student, double rawScore) {
+    public boolean gradeStudent(Student student, double rawScore) {
         if (enrolledStudents.contains(student)) {
             this.rawScores.put(student, rawScore);
-            this.grades = gradingStrategy.calculateGrades(this.rawScores); 
-            notifyObservers("A new grade was posted in " + courseName+".");
+            this.grades = gradingStrategy.calculateGrades(this.rawScores);
+            notifyObservers("A new grade was posted in " + courseName + ".");
+            return true; 
         } else {
             System.out.println("Error: Student not enrolled.");
+            return false; 
         }
     }
 

@@ -110,10 +110,15 @@ public class SimpleWebServer {
             Student student = DataManager.loadStudents().stream().filter(s -> s.getId().equals(params.get("studentId"))).findFirst().orElse(null);
             
             if (course != null && student != null) {
-                professorController.inputGrade(course, student, Double.parseDouble(params.get("score")));
-                sendResponse(exchange, "Grade submitted successfully!");
+                boolean success = professorController.inputGrade(course, student, Double.parseDouble(params.get("score")));
+
+                if (success) {
+                    sendResponse(exchange, "Grade submitted successfully!");
+                } else{
+                    sendResponse(exchange, "Error: Student is not enrolled in this course!");
+                }
             } else {
-                sendResponse(exchange, "Error submitting grade.");
+                sendResponse(exchange, "Error: Invalid Course ID or Student ID.");
             }
         });
 

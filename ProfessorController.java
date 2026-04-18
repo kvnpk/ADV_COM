@@ -7,10 +7,14 @@ public class ProfessorController {
         this.masterCourseList = masterCourseList;
     }
 
-    public void inputGrade(Course course, Student student, double rawScore) {
+    public boolean inputGrade(Course course, Student student, double rawScore) {
         System.out.println("System: Professor is submitting a grade...");
-        course.gradeStudent(student, rawScore);
-        DataManager.saveCourses(masterCourseList);
+        boolean success = course.gradeStudent(student, rawScore);
+
+        if (success) {
+            DataManager.saveCourses(masterCourseList);
+        }
+        return success;
     }
 
     public void createCourse(String name, String id, GradingStrategy strategy) {

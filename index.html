@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>MyCourseVille - Login</title>
+    <title>University Course Manager - Login</title>
     <style>
         body { font-family: sans-serif; background-color: #f0f2f5; padding: 60px; text-align: center; }
         h1 { color: #1a73e8; font-size: 2.5rem; margin-bottom: 10px; }
         .container { display: flex; justify-content: center; gap: 30px; margin-top: 30px; }
         
-        /* Role Selection Cards */
+
         .card { 
             background: white; padding: 40px; border-radius: 12px; 
             box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 250px;
@@ -18,11 +18,10 @@
         .card h2 { color: #1a73e8; margin-top: 0; }
         .card p { font-size: 0.9rem; color: #555; }
 
-        /* Login Panels (Hidden by default) */
         .login-panel { 
             background: white; padding: 30px; border-radius: 10px; 
             box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 300px; text-align: left; margin: 0 auto;
-            display: none; /* Hidden initially */
+            display: none;
             margin-top: 30px;
         }
         input, button.submit-btn { width: 100%; padding: 10px; margin-top: 10px; box-sizing: border-box; }
@@ -36,7 +35,7 @@
     </style>
 </head>
 <body>
-    <h1>MyCourseVille</h1>
+    <h1>University Course Manager</h1>
     <p id="subtitle">Please select your role to log in.</p>
 
     <div id="roleSelection" class="container">
@@ -70,11 +69,9 @@
 
     <script>
         function showLogin(role) {
-            // Hide the role selection cards
             document.getElementById('roleSelection').style.display = 'none';
             document.getElementById('subtitle').innerText = "Enter your credentials.";
             
-            // Show the specific login form
             if (role === 'Student') {
                 document.getElementById('studentLogin').style.display = 'block';
             } else {
@@ -83,11 +80,9 @@
         }
 
         function goBack() {
-            // Hide all login forms
             document.getElementById('studentLogin').style.display = 'none';
             document.getElementById('professorLogin').style.display = 'none';
             
-            // Show the role selection cards again
             document.getElementById('roleSelection').style.display = 'flex';
             document.getElementById('subtitle').innerText = "Please select your role to log in.";
         }

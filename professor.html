@@ -8,7 +8,6 @@
         .header { max-width: 900px; margin: 0 auto; text-align: left; margin-bottom: 20px;}
         .container { display: flex; justify-content: center; gap: 30px; margin-top: 30px; max-width: 900px; margin: 0 auto;}
         
-        /* Dashboard Cards */
         .card { 
             background: white; padding: 40px; border-radius: 12px; 
             box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 250px;
@@ -18,7 +17,6 @@
         .card h2 { color: #1a73e8; margin-top: 0; }
         .card p { font-size: 0.9rem; color: #555; }
 
-        /* Panels */
         .panel { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; margin: 0 auto; text-align: left;}
         .hidden { display: none !important; }
         
@@ -78,17 +76,15 @@
     </div>
 
     <script>
-        // Security check
         const loggedInId = sessionStorage.getItem("loggedInId");
         const loggedInName = sessionStorage.getItem("loggedInName");
         
         if (!loggedInId || sessionStorage.getItem("role") !== "Professor") {
-            window.location.href = "/"; // Kick them back to login
+            window.location.href = "/"; 
         } else {
             document.getElementById("welcomeMessage").innerText = "Welcome, Professor " + loggedInName + "!";
         }
 
-        // UI Navigation
         function showPanel(panelId) {
             document.getElementById('menuCards').style.display = 'none';
             document.getElementById('subtitle').style.display = 'none';
@@ -114,7 +110,6 @@
             }
         }
 
-        // Backend Actions
         function createCourse() {
             const data = new URLSearchParams({
                 courseName: document.getElementById('courseName').value,
@@ -143,10 +138,9 @@
                 .then(r => r.text())
                 .then(msg => {
                     alert(msg);
-                    // Clear the inputs
                     document.getElementById('gradeStudentId').value = '';
                     document.getElementById('rawScore').value = '';
-                    showMenu(); // Return to menu
+                    showMenu(); 
                 });
         }
     </script>
